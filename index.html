@@ -9,11 +9,11 @@
         :root {
             --glass: rgba(255, 255, 255, 0.08);
             --glass-border: rgba(255, 255, 255, 0.15);
-            --accent: #007AFF;
+            --accent-blue: #0a84ff;
+            --accent-green: #32d74b;
             --protein: #FF375F;
             --carbs: #0A84FF;
             --fats: #FFD60A;
-            --cals: #32D74B;
             --error: #FF453A;
         }
 
@@ -41,12 +41,11 @@
             animation: meshMove 20s ease infinite;
             z-index: -2;
         }
-
         @keyframes meshMove { 0%, 100% { background-position: 0% 0%; } 50% { background-position: 100% 100%; } }
 
         #luminous-glow {
             position: absolute; width: 800px; height: 800px;
-            background: radial-gradient(circle, rgba(0, 122, 255, 0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(10, 132, 255, 0.15) 0%, transparent 70%);
             filter: blur(100px); z-index: -1; transform: translate(-50%, -50%);
             left: 50%; top: 50%; transition: all 1s;
         }
@@ -65,13 +64,48 @@
             overflow: hidden;
         }
 
-        /* SHAKE ANIMATION FOR ERRORS */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-10px); }
             40%, 80% { transform: translateX(10px); }
         }
         .error-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border-color: var(--error); }
+
+        /* 🔥 PREMIUM BUTTON INTEGRATION */
+        .pro-btn {
+            position: relative;
+            overflow: hidden;
+            padding: 18px 22px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            width: 100%;
+            margin-top: 20px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+            box-shadow: 0 12px 30px rgba(10,132,255,0.35);
+            transition: all 0.25s ease;
+            font-size: 1.1rem;
+        }
+
+        .pro-btn::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: translateX(-120%);
+            transition: transform 0.7s ease;
+        }
+
+        .pro-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 18px 50px rgba(10,132,255,0.6);
+        }
+
+        .pro-btn:hover::before { transform: translateX(120%); }
+        .pro-btn:active { transform: scale(0.95); }
 
         input, select {
             width: 100%; padding: 18px; margin: 12px 0;
@@ -81,35 +115,26 @@
         }
         .input-error { border-color: var(--error) !important; background: rgba(255, 69, 58, 0.05) !important; }
 
-        .glass-btn {
-            background: var(--accent); color: white; border: none;
-            padding: 18px; border-radius: 20px; cursor: pointer;
-            font-size: 1.1rem; font-weight: 600; width: 100%; margin-top: 20px;
-            box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3);
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
         .hidden { display: none; opacity: 0; }
         .visible { display: block; animation: slideUp 0.6s forwards; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
 
         /* DASHBOARD COMPONENTS */
-        .cal-hero { font-size: 4rem; font-weight: 200; color: var(--cals); animation: glowPulse 2s infinite alternate; }
-        @keyframes glowPulse { from { text-shadow: 0 0 10px rgba(50, 215, 75, 0.2); } to { text-shadow: 0 0 30px rgba(50, 215, 75, 0.6); } }
-
+        .cal-hero { font-size: 4rem; font-weight: 200; color: var(--accent-green); text-shadow: 0 0 20px rgba(50, 215, 75, 0.3); }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
         .stat-card { 
             background: rgba(255,255,255,0.03); padding: 20px; border-radius: 24px; 
             border: 1px solid var(--glass-border); opacity: 0; transition: transform 0.3s;
         }
-        .stat-card:hover { transform: translateY(-5px); }
+        .stat-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.06); }
         .animate-card { animation: slideUp 0.6s forwards; }
 
         /* SEGMENTED CONTROL */
-        .segment-container { display: flex; background: rgba(255,255,255,0.05); border-radius: 15px; padding: 5px; margin: 10px 0; }
+        .segment-container { display: flex; background: rgba(255,255,255,0.05); border-radius: 15px; padding: 5px; margin: 10px 0; border: 1px solid var(--glass-border); }
         .segment-btn { flex: 1; padding: 12px; cursor: pointer; border-radius: 11px; font-size: 0.85rem; transition: 0.3s; text-align: center; }
-        .active { background: var(--accent); box-shadow: 0 4px 15px rgba(0,122,255,0.3); }
+        .active { background: linear-gradient(135deg, var(--accent-blue), #5856D6); box-shadow: 0 4px 15px rgba(0,122,255,0.3); }
 
+        .label { font-size: 0.75rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 2px; }
     </style>
 </head>
 <body>
@@ -120,24 +145,24 @@
     <div class="glass-card" id="mainCard">
         
         <div id="step1" class="visible">
-            <h2 style="font-weight: 200; margin-bottom: 20px;">Biometrics</h2>
+            <h2 style="font-weight: 200; margin-bottom: 20px;">Architecture</h2>
             
-            <p class="label">Gender</p>
-            <div class="segment-container" id="gender-selector">
+            <p class="label">Identity</p>
+            <div class="segment-container">
                 <div class="segment-btn active" onclick="setGender('male', this)">Male</div>
                 <div class="segment-btn" onclick="setGender('female', this)">Female</div>
             </div>
 
             <div class="segment-container">
-                <div class="segment-btn active" id="btn-cm" onclick="setU('cm')">Metric (CM)</div>
-                <div class="segment-btn" id="btn-ft" onclick="setU('ft')">Imperial (FT)</div>
+                <div class="segment-btn active" id="btn-cm" onclick="setU('cm')">Metric</div>
+                <div class="segment-btn" id="btn-ft" onclick="setU('ft')">Imperial</div>
             </div>
             
             <div id="h-wrap"><input type="number" id="h-val" class="validate" placeholder="Height (cm)"></div>
             <input type="number" id="weight" class="validate" placeholder="Weight (kg)">
             <input type="number" id="age" class="validate" placeholder="Age">
             
-            <button class="glass-btn" onclick="validateStep1()">Continue</button>
+            <button class="pro-btn" onclick="validateStep1()">CONTINUE</button>
         </div>
 
         <div id="step2" class="hidden">
@@ -145,30 +170,30 @@
             <select id="goal">
                 <option value="lose">Aggressive Fat Loss</option>
                 <option value="maintain" selected>Lean Maintenance</option>
-                <option value="gain">Hypertrophy / Bulk</option>
+                <option value="gain">Muscle Gain / Bulk</option>
             </select>
-            <button class="glass-btn" onclick="genDash()">Build Architecture</button>
+            <button class="pro-btn" onclick="genDash()">ANALYZE DATA</button>
         </div>
 
         <div id="step3" class="hidden">
-            <p class="label" id="user-label">Daily Target</p>
+            <p class="label">Target Calories</p>
             <div class="cal-hero" id="d-cals">0</div>
             <div style="height: 160px; margin: 10px 0;"><canvas id="chart"></canvas></div>
             <div class="stat-grid" id="statGrid">
                 <div class="stat-card" style="animation-delay: 0.2s">
-                    <span id="d-p" style="color:var(--protein)">0</span><p class="label">Protein</p>
+                    <span id="d-p" style="color:var(--protein); font-size: 1.8rem; font-weight: 700;">0</span><p class="label">Protein</p>
                 </div>
                 <div class="stat-card" style="animation-delay: 0.4s">
-                    <span id="d-c" style="color:var(--carbs)">0</span><p class="label">Carbs</p>
+                    <span id="d-c" style="color:var(--carbs); font-size: 1.8rem; font-weight: 700;">0</span><p class="label">Carbs</p>
                 </div>
                 <div class="stat-card" style="animation-delay: 0.6s">
-                    <span id="d-f" style="color:var(--fats)">0</span><p class="label">Fats</p>
+                    <span id="d-f" style="color:var(--fats); font-size: 1.8rem; font-weight: 700;">0</span><p class="label">Fats</p>
                 </div>
                 <div class="stat-card" style="animation-delay: 0.8s">
-                    <span id="d-fiber" style="color:#fff">0</span><p class="label">Fiber</p>
+                    <span id="d-fiber" style="color:#fff; font-size: 1.8rem; font-weight: 700;">0</span><p class="label">Fiber</p>
                 </div>
             </div>
-            <button class="glass-btn" style="background: var(--glass); margin-top: 30px; border: 1px solid var(--glass-border);" onclick="location.reload()">Reset Analysis</button>
+            <button class="pro-btn" style="background: var(--glass); margin-top: 30px; border: 1px solid var(--glass-border);" onclick="location.reload()">RESET</button>
         </div>
     </div>
 
@@ -194,14 +219,9 @@
         function validateStep1() {
             let isValid = true;
             const fields = document.querySelectorAll('.validate');
-            
             fields.forEach(f => {
-                if(!f.value || f.value <= 0) {
-                    f.classList.add('input-error');
-                    isValid = false;
-                } else {
-                    f.classList.remove('input-error');
-                }
+                if(!f.value || f.value <= 0) { f.classList.add('input-error'); isValid = false; }
+                else { f.classList.remove('input-error'); }
             });
 
             if(!isValid) {
@@ -229,9 +249,8 @@
             const w = parseFloat(document.getElementById('weight').value);
             const g = document.getElementById('goal').value;
 
-            // Simplified Calculation Logic
             let p = g === 'gain' ? w*2.2 : (g === 'lose' ? w*2.1 : w*1.8);
-            let f = userData.gender === 'female' ? w*0.9 : w*0.8; // Gender specific tweak
+            let f = userData.gender === 'female' ? w*0.9 : w*0.8; 
             let c = g === 'gain' ? w*4.8 : (g === 'lose' ? w*2.2 : w*3.5);
             let cals = (p*4) + (c*4) + (f*9);
 
