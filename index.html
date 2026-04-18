@@ -3,286 +3,1042 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Health Architecture</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Nutrition Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root {
-            --glass: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --accent-blue: #0a84ff;
-            --accent-green: #32d74b;
-            --protein: #FF375F;
-            --carbs: #0A84FF;
-            --fats: #FFD60A;
-            --error: #FF453A;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, system-ui, sans-serif; }
-
+        * { box-sizing: border-box; }
+        
         body {
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #000;
-            overflow: hidden;
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(-45deg, #1e3c72, #2a5298, #ff6a00, #ee0979);
+            background-size: 400% 400%;
+            animation: gradientBG 45s ease infinite;
+            min-height: 100vh;
             color: #fff;
+            padding: 20px;
         }
 
-        /* LIVE MESH GRADIENT */
-        .mesh-bg {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(at 0% 0%, #1a1a2e 0%, transparent 50%),
-                        radial-gradient(at 100% 0%, #0f3460 0%, transparent 50%),
-                        radial-gradient(at 100% 100%, #16213e 0%, transparent 50%),
-                        radial-gradient(at 0% 100%, #000 0%, transparent 50%);
-            background-size: 200% 200%;
-            animation: meshMove 20s ease infinite;
-            z-index: -2;
-        }
-        @keyframes meshMove { 0%, 100% { background-position: 0% 0%; } 50% { background-position: 100% 100%; } }
-
-        #luminous-glow {
-            position: absolute; width: 800px; height: 800px;
-            background: radial-gradient(circle, rgba(10, 132, 255, 0.15) 0%, transparent 70%);
-            filter: blur(100px); z-index: -1; transform: translate(-50%, -50%);
-            left: 50%; top: 50%; transition: all 1s;
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
-        .glass-card {
-            background: var(--glass);
-            backdrop-filter: blur(50px);
-            -webkit-backdrop-filter: blur(50px);
-            border: 1px solid var(--glass-border);
-            border-radius: 44px;
-            padding: 40px;
-            width: 420px;
-            box-shadow: 0 50px 100px rgba(0,0,0,0.9);
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            overflow: hidden;
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(30px) saturate(150%);
+            -webkit-backdrop-filter: blur(30px) saturate(150%);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-10px); }
-            40%, 80% { transform: translateX(10px); }
-        }
-        .error-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border-color: var(--error); }
+        h1, h2, h3 { text-align: center; margin-top: 0; }
+        
+        .hidden { display: none !important; }
 
-        /* 🔥 PREMIUM BUTTON INTEGRATION */
-        .pro-btn {
-            position: relative;
-            overflow: hidden;
-            padding: 18px 22px;
-            border: none;
-            border-radius: 20px;
-            font-weight: 700;
-            color: white;
-            cursor: pointer;
-            letter-spacing: 0.5px;
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
+        
+        input, select {
             width: 100%;
-            margin-top: 20px;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
-            box-shadow: 0 12px 30px rgba(10,132,255,0.35);
-            transition: all 0.25s ease;
-            font-size: 1.1rem;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        input:focus, select:focus {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
 
-        .pro-btn::before {
+        input::placeholder { color: rgba(255, 255, 255, 0.6); }
+        option { background: #1e3c72; color: #fff; }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+            box-shadow: none;
+            background: transparent;
+            border: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff8a00, #e52e71);
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(229, 46, 113, 0.6);
+            border: 2px solid #fff;
+            transition: transform 0.1s;
+        }
+
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .btn {
+            background: linear-gradient(90deg, #ff8a00, #e52e71, #ff8a00);
+            background-size: 200% auto;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 999px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(229, 46, 113, 0.4);
+            transition: all 0.5s ease;
+            width: 100%;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:hover {
+            background-position: right center;
+            box-shadow: 0 8px 25px rgba(229, 46, 113, 0.6);
+            transform: translateY(-3px) scale(1.02);
+        }
+        
+        .btn::after {
             content: "";
             position: absolute;
-            inset: 0;
-            background: linear-gradient(110deg, transparent, rgba(255,255,255,0.4), transparent);
-            transform: translateX(-120%);
-            transition: transform 0.7s ease;
+            top: -50%;
+            left: -60%;
+            width: 20%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(30deg);
+            transition: 0.6s ease-in-out;
+        }
+        
+        .btn:hover::after {
+            left: 120%;
         }
 
-        .pro-btn:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 18px 50px rgba(10,132,255,0.6);
+        .btn-secondary {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%, #4facfe);
+            background-size: 200% auto;
+            box-shadow: 0 4px 10px rgba(0, 242, 254, 0.3);
+            color: #fff;
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 999px;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background-position: right center;
+            box-shadow: 0 6px 15px rgba(0, 242, 254, 0.5);
+            transform: translateY(-2px) scale(1.02);
+        }
+        
+        .btn-secondary::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: rotate(30deg);
+            transition: 0.6s ease-in-out;
+        }
+        
+        .btn-secondary:hover::after {
+            left: 120%;
         }
 
-        .pro-btn:hover::before { transform: translateX(120%); }
-        .pro-btn:active { transform: scale(0.95); }
+        /* Height Toggle */
+        .height-toggle { display: flex; gap: 10px; margin-bottom: 10px; }
+        .height-toggle label { font-weight: normal; font-size: 14px; cursor: pointer; }
+        
+        #height-ft-in { display: none; gap: 10px; }
 
-        input, select {
-            width: 100%; padding: 18px; margin: 12px 0;
-            background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border);
-            border-radius: 20px; color: white; outline: none; font-size: 1rem;
-            transition: 0.3s;
+        /* Dashboard Stats */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }
-        .input-error { border-color: var(--error) !important; background: rgba(255, 69, 58, 0.05) !important; }
 
-        .hidden { display: none; opacity: 0; }
-        .visible { display: block; animation: slideUp 0.6s forwards; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* DASHBOARD COMPONENTS */
-        .cal-hero { font-size: 4rem; font-weight: 200; color: var(--accent-green); text-shadow: 0 0 20px rgba(50, 215, 75, 0.3); }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
-        .stat-card { 
-            background: rgba(255,255,255,0.03); padding: 20px; border-radius: 24px; 
-            border: 1px solid var(--glass-border); opacity: 0; transition: transform 0.3s;
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .stat-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.06); }
-        .animate-card { animation: slideUp 0.6s forwards; }
 
-        /* SEGMENTED CONTROL */
-        .segment-container { display: flex; background: rgba(255,255,255,0.05); border-radius: 15px; padding: 5px; margin: 10px 0; border: 1px solid var(--glass-border); }
-        .segment-btn { flex: 1; padding: 12px; cursor: pointer; border-radius: 11px; font-size: 0.85rem; transition: 0.3s; text-align: center; }
-        .active { background: linear-gradient(135deg, var(--accent-blue), #5856D6); box-shadow: 0 4px 15px rgba(0,122,255,0.3); }
+        .progress-wrapper {
+            margin-top: 10px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 500;
+        }
 
-        .label { font-size: 0.75rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 2px; }
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 8px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 999px;
+            transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .pb-calories { background: #ff9a9e; box-shadow: 0 0 10px #ff9a9e; }
+        .pb-protein { background: #a1c4fd; box-shadow: 0 0 10px #a1c4fd; }
+        .pb-fats { background: #fbc2eb; box-shadow: 0 0 10px #fbc2eb; }
+        .pb-carbs { background: #8fd3f4; box-shadow: 0 0 10px #8fd3f4; }
+
+        /* Meals Section */
+        .meal-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .meal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 15px;
+            margin-bottom: 10px;
+        }
+
+        .food-list { list-style: none; padding: 0; margin: 0; }
+        .food-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+            font-size: 15px;
+        }
+
+        .add-food-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .autocomplete {
+            position: relative;
+            flex: 1;
+            min-width: 100%;
+        }
+        
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(44, 62, 80, 0.95);
+            backdrop-filter: blur(20px);
+            max-height: 200px;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-top: 5px;
+        }
+        
+        .autocomplete-items div {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        
+        .autocomplete-items div:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 1000;
+            backdrop-filter: blur(5px);
+            display: flex; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: rgba(30, 60, 114, 0.85);
+            backdrop-filter: blur(40px) saturate(200%);
+            padding: 30px; border-radius: 24px;
+            width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            color: #fff;
+        }
+        .close-modal { float: right; cursor: pointer; font-size: 24px; color: #ff9a9e; }
+        .close-modal:hover { color: #fff; }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 15px;
+            font-size: 14px;
+            color: white;
+            opacity: 0.7;
+            letter-spacing: 1px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .footer span {
+            font-weight: 600;
+            background: linear-gradient(90deg, #ffffff, #b3b3b3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
 <body>
 
-    <div class="mesh-bg"></div>
-    <div id="luminous-glow"></div>
-
-    <div class="glass-card" id="mainCard">
+    <!-- PAGE 1: SETUP -->
+    <div id="page-setup" class="glass-panel">
+        <h1>Welcome to NutriTrack</h1>
+        <p style="text-align: center; opacity: 0.8;">Let's personalize your experience</p>
         
-        <div id="step1" class="visible">
-            <h2 style="font-weight: 200; margin-bottom: 20px;">Architecture</h2>
-            
-            <p class="label">Identity</p>
-            <div class="segment-container">
-                <div class="segment-btn active" onclick="setGender('male', this)">Male</div>
-                <div class="segment-btn" onclick="setGender('female', this)">Female</div>
+        <form id="setup-form">
+            <div class="form-group">
+                <label>Age (years)</label>
+                <input type="number" id="age" required min="10" max="100">
             </div>
 
-            <div class="segment-container">
-                <div class="segment-btn active" id="btn-cm" onclick="setU('cm')">Metric</div>
-                <div class="segment-btn" id="btn-ft" onclick="setU('ft')">Imperial</div>
+            <div class="form-group">
+                <label>Gender</label>
+                <select id="gender" required>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
             </div>
-            
-            <div id="h-wrap"><input type="number" id="h-val" class="validate" placeholder="Height (cm)"></div>
-            <input type="number" id="weight" class="validate" placeholder="Weight (kg)">
-            <input type="number" id="age" class="validate" placeholder="Age">
-            
-            <button class="pro-btn" onclick="validateStep1()">CONTINUE</button>
-        </div>
 
-        <div id="step2" class="hidden">
-            <h2 style="font-weight: 200; margin-bottom: 25px;">Objective</h2>
-            <select id="goal">
-                <option value="lose">Aggressive Fat Loss</option>
-                <option value="maintain" selected>Lean Maintenance</option>
-                <option value="gain">Muscle Gain / Bulk</option>
-            </select>
-            <button class="pro-btn" onclick="genDash()">ANALYZE DATA</button>
-        </div>
+            <div class="form-group">
+                <label>Weight (kg) - Needed for Macro Calculation</label>
+                <input type="number" id="weight" required min="30" max="250" step="0.1">
+            </div>
 
-        <div id="step3" class="hidden">
-            <p class="label">Target Calories</p>
-            <div class="cal-hero" id="d-cals">0</div>
-            <div style="height: 160px; margin: 10px 0;"><canvas id="chart"></canvas></div>
-            <div class="stat-grid" id="statGrid">
-                <div class="stat-card" style="animation-delay: 0.2s">
-                    <span id="d-p" style="color:var(--protein); font-size: 1.8rem; font-weight: 700;">0</span><p class="label">Protein</p>
+            <div class="form-group">
+                <label>Height</label>
+                <div class="height-toggle">
+                    <label><input type="radio" name="h-unit" value="cm" checked> cm</label>
+                    <label><input type="radio" name="h-unit" value="ft"> ft/in</label>
                 </div>
-                <div class="stat-card" style="animation-delay: 0.4s">
-                    <span id="d-c" style="color:var(--carbs); font-size: 1.8rem; font-weight: 700;">0</span><p class="label">Carbs</p>
-                </div>
-                <div class="stat-card" style="animation-delay: 0.6s">
-                    <span id="d-f" style="color:var(--fats); font-size: 1.8rem; font-weight: 700;">0</span><p class="label">Fats</p>
-                </div>
-                <div class="stat-card" style="animation-delay: 0.8s">
-                    <span id="d-fiber" style="color:#fff; font-size: 1.8rem; font-weight: 700;">0</span><p class="label">Fiber</p>
+                <input type="number" id="height-cm" placeholder="Height in cm" required min="100" max="250">
+                <div id="height-ft-in">
+                    <input type="number" id="height-ft" placeholder="Feet" min="3" max="8">
+                    <input type="number" id="height-in" placeholder="Inches" min="0" max="11">
                 </div>
             </div>
-            <button class="pro-btn" style="background: var(--glass); margin-top: 30px; border: 1px solid var(--glass-border);" onclick="location.reload()">RESET</button>
+
+            <div class="form-group">
+                <label>Activity Level</label>
+                <select id="activity" required>
+                    <option value="1.2">Sedentary (little or no exercise)</option>
+                    <option value="1.375">Lightly active (1-3 days/week)</option>
+                    <option value="1.55">Moderately active (3-5 days/week)</option>
+                    <option value="1.725">Very active (6-7 days/week)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Goal</label>
+                <select id="goal" required>
+                    <option value="-500">Lose Weight</option>
+                    <option value="0">Maintain Weight</option>
+                    <option value="500">Gain Weight</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn">Calculate & Start</button>
+        </form>
+    </div>
+
+    <!-- CUSTOM FOOD MODAL -->
+    <div id="modal-custom" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <h3 style="margin-top:0">Create Custom Food</h3>
+            <div class="form-group"><label>Food Name & Qty (e.g. Apple 100g)</label><input type="text" id="cf-name"></div>
+            <div style="display:flex; gap:10px;">
+                <div class="form-group"><label>Kcal</label><input type="number" id="cf-kcal" min="0"></div>
+                <div class="form-group"><label>Protein (g)</label><input type="number" id="cf-pro" min="0"></div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div class="form-group"><label>Fats (g)</label><input type="number" id="cf-fat" min="0"></div>
+                <div class="form-group"><label>Carbs (g)</label><input type="number" id="cf-carb" min="0"></div>
+            </div>
+            <button class="btn" id="btn-save-custom">Save to Database</button>
         </div>
     </div>
 
+    <!-- PAGE 2: DASHBOARD -->
+    <div id="page-dashboard" class="glass-panel hidden">
+        <div class="top-bar" style="flex-wrap: wrap;">
+            <h2>Daily Nutrition</h2>
+            <div id="top-bar-date" style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <input type="date" id="date-picker" style="padding:8px 12px; width:150px; margin:0; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color:#fff; font-family:'Inter',sans-serif;">
+            </div>
+            <div id="top-bar-buttons" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                <button class="btn btn-secondary" id="btn-add-custom" style="margin-bottom:5px;">+ New Food</button>
+                <button class="btn btn-secondary" id="btn-download" style="margin-bottom:5px;">PDF</button>
+                <button class="btn btn-secondary" id="btn-reset" style="background: linear-gradient(90deg, #ff0844 0%, #ffb199 100%); margin-bottom:5px;">Reset</button>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>Calories</h3>
+                <div id="cal-text">0 / 0 kcal</div>
+                <div class="progress-wrapper">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar pb-calories" id="pb-cal"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>Protein</h3>
+                <div id="pro-text">0 / 0 g</div>
+                <div class="progress-wrapper">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar pb-protein" id="pb-pro"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>Fats</h3>
+                <div id="fat-text">0 / 0 g</div>
+                <div class="progress-wrapper">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar pb-fats" id="pb-fat"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <h3>Carbs</h3>
+                <div id="carb-text">0 / 0 g</div>
+                <div class="progress-wrapper">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar pb-carbs" id="pb-carb"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="meals-container">
+            <!-- Meals will be injected here -->
+        </div>
+        
+        <div style="text-align:center; margin-top: 30px;">
+            <button class="btn btn-secondary" id="btn-download-all" style="width:100%; max-width:300px; padding:12px; font-weight:600;">Export All History (PDF)</button>
+        </div>
+    </div>
+    
+    <!-- HIDDEN DIV FOR FULL HISTORY PDF -->
+    <div id="full-history-container" style="display:none; background:white; color:black; padding:40px; font-family:sans-serif;"></div>
+
     <script>
-        let userData = { gender: 'male', unit: 'cm' };
+        // Food Database with approximate values for calculation
+        let foodDB = [
+            { name: 'Roti (1 piece)', kcal: 70, p: 2, f: 0, c: 15 },
+            { name: 'Peanut butter (1 tbsp)', kcal: 90, p: 4, f: 8, c: 3 },
+            { name: 'Peanut butter (100g)', kcal: 588, p: 25, f: 50, c: 20 },
+            { name: 'Alpha shake (Full)', kcal: 924, p: 30, f: 35, c: 130 },
+            { name: 'Sprouts moong dal (100g)', kcal: 30, p: 3, f: 0, c: 6 },
+            { name: 'Soaked chana (100g)', kcal: 164, p: 9, f: 3, c: 27 },
+            { name: 'Buffalo milk (100ml)', kcal: 97, p: 4, f: 7, c: 5 },
+            { name: 'Cow milk (100ml)', kcal: 62, p: 3, f: 3, c: 5 },
+            { name: 'Paneer (100g)', kcal: 265, p: 18, f: 20, c: 1 },
+            { name: 'Curd (100g)', kcal: 98, p: 3, f: 4, c: 3 },
+            { name: 'Peanuts roasted (100g)', kcal: 567, p: 26, f: 49, c: 16 },
+            { name: 'Banana (1 medium)', kcal: 105, p: 1, f: 0, c: 27 },
+            { name: 'Almonds (100g)', kcal: 579, p: 21, f: 50, c: 22 },
+            { name: 'Soyabean soaked (100g)', kcal: 141, p: 14, f: 7, c: 9 },
+            { name: 'Soyabean sabji (100g)', kcal: 150, p: 12, f: 8, c: 10 },
+            { name: 'Poha (100g cooked)', kcal: 180, p: 3, f: 5, c: 30 },
+            { name: 'Besan chilla (1 piece)', kcal: 150, p: 6, f: 5, c: 20 },
+            { name: 'Whey (40g scoop)', kcal: 150, p: 25, f: 2, c: 5 },
+            { name: 'Egg (1 large)', kcal: 78, p: 6, f: 5, c: 1 },
+            { name: 'Rice (100g cooked)', kcal: 130, p: 2, f: 0, c: 28 },
+            { name: 'Oats (100g raw)', kcal: 389, p: 17, f: 7, c: 66 }
+        ];
 
-        function setGender(val, el) {
-            userData.gender = val;
-            el.parentElement.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-        }
+        const meals = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
+        let userNeeds = { kcal: 0, p: 0, f: 0, c: 0 };
+        let consumed = { kcal: 0, p: 0, f: 0, c: 0 };
+        let mealSelections = {}; // Store currently selected food per meal for previews
+        
+        // Calendar & History
+        let currentDate = new Date().toISOString().split('T')[0];
+        let history = {};
 
-        function setU(u) {
-            userData.unit = u;
-            document.getElementById('btn-cm').classList.toggle('active', u === 'cm');
-            document.getElementById('btn-ft').classList.toggle('active', u === 'ft');
-            const wrap = document.getElementById('h-wrap');
-            wrap.innerHTML = u === 'ft' 
-                ? `<div style="display:flex; gap:10px"><input type="number" id="ft" class="validate" placeholder="Ft"><input type="number" id="in" class="validate" placeholder="In"></div>`
-                : `<input type="number" id="h-val" class="validate" placeholder="Height (cm)">`;
-        }
-
-        function validateStep1() {
-            let isValid = true;
-            const fields = document.querySelectorAll('.validate');
-            fields.forEach(f => {
-                if(!f.value || f.value <= 0) { f.classList.add('input-error'); isValid = false; }
-                else { f.classList.remove('input-error'); }
+        // Elements
+        const p1 = document.getElementById('page-setup');
+        const p2 = document.getElementById('page-dashboard');
+        const hUnitRadios = document.getElementsByName('h-unit');
+        const hCm = document.getElementById('height-cm');
+        const hFtIn = document.getElementById('height-ft-in');
+        
+        // Height Toggle Logic
+        hUnitRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if(e.target.value === 'cm') {
+                    hCm.style.display = 'block';
+                    hCm.required = true;
+                    hFtIn.style.display = 'none';
+                    document.getElementById('height-ft').required = false;
+                    document.getElementById('height-in').required = false;
+                } else {
+                    hCm.style.display = 'none';
+                    hCm.required = false;
+                    hFtIn.style.display = 'flex';
+                    document.getElementById('height-ft').required = true;
+                    document.getElementById('height-in').required = true;
+                }
             });
+        });
 
-            if(!isValid) {
-                const card = document.getElementById('mainCard');
-                card.classList.add('error-shake');
-                setTimeout(() => card.classList.remove('error-shake'), 400);
-                return;
-            }
-            goTo(2, '#7000FF');
-        }
-
-        function goTo(s, col) {
-            const glow = document.getElementById('luminous-glow');
-            glow.style.background = `radial-gradient(circle, ${col}44 0%, transparent 70%)`;
-            document.querySelectorAll('.glass-card > div').forEach(d => { d.classList.remove('visible'); d.classList.add('hidden'); });
-            const next = document.getElementById('step' + s);
-            next.classList.remove('hidden');
-            setTimeout(() => next.classList.add('visible'), 50);
-        }
-
-        function genDash() {
-            goTo(3, '#32D74B');
-            document.getElementById('mainCard').style.width = '480px';
+        // Load State
+        window.onload = () => {
+            document.getElementById('date-picker').value = currentDate;
             
-            const w = parseFloat(document.getElementById('weight').value);
-            const g = document.getElementById('goal').value;
+            const customFoods = localStorage.getItem('customFoods');
+            if(customFoods) {
+                foodDB = foodDB.concat(JSON.parse(customFoods));
+            }
+            const savedNeeds = localStorage.getItem('userNeeds');
+            if(savedNeeds) {
+                userNeeds = JSON.parse(savedNeeds);
+                
+                // History Migration
+                const savedHistory = localStorage.getItem('history');
+                if (savedHistory) {
+                    history = JSON.parse(savedHistory);
+                } else {
+                    const savedDiary = localStorage.getItem('diary'); // old format fallback
+                    if (savedDiary) history[currentDate] = JSON.parse(savedDiary);
+                }
+                
+                if (!history[currentDate]) {
+                    history[currentDate] = { 'Breakfast': [], 'Lunch': [], 'Dinner': [], 'Snacks': [] };
+                }
+                
+                initDashboard();
+            }
+        };
 
-            let p = g === 'gain' ? w*2.2 : (g === 'lose' ? w*2.1 : w*1.8);
-            let f = userData.gender === 'female' ? w*0.9 : w*0.8; 
-            let c = g === 'gain' ? w*4.8 : (g === 'lose' ? w*2.2 : w*3.5);
-            let cals = (p*4) + (c*4) + (f*9);
+        document.getElementById('date-picker').addEventListener('change', (e) => {
+            currentDate = e.target.value;
+            if(!currentDate) return;
+            if(!history[currentDate]) {
+                history[currentDate] = { 'Breakfast': [], 'Lunch': [], 'Dinner': [], 'Snacks': [] };
+            }
+            renderMeals();
+            updateStats();
+        });
 
-            animate('d-cals', cals);
-            animate('d-p', p);
-            animate('d-c', c);
-            animate('d-f', f);
-            animate('d-fiber', Math.round(cals/1000 * 14));
+        // Form Submit
+        document.getElementById('setup-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const age = parseFloat(document.getElementById('age').value);
+            const gender = document.getElementById('gender').value;
+            const weight = parseFloat(document.getElementById('weight').value);
+            const activity = parseFloat(document.getElementById('activity').value);
+            const goal = parseFloat(document.getElementById('goal').value);
+            
+            let height = 0;
+            if(document.querySelector('input[name="h-unit"]:checked').value === 'cm') {
+                height = parseFloat(hCm.value);
+            } else {
+                const ft = parseFloat(document.getElementById('height-ft').value) || 0;
+                const ins = parseFloat(document.getElementById('height-in').value) || 0;
+                height = (ft * 30.48) + (ins * 2.54);
+            }
 
-            document.querySelectorAll('.stat-card').forEach(c => c.classList.add('animate-card'));
+            // BMR (Mifflin-St Jeor)
+            let bmr = (10 * weight) + (6.25 * height) - (5 * age);
+            bmr += (gender === 'male') ? 5 : -161;
 
-            new Chart(document.getElementById('chart'), {
-                type: 'doughnut',
-                data: {
-                    datasets: [{
-                        data: [p*4, c*4, f*9],
-                        backgroundColor: ['#FF375F', '#0A84FF', '#FFD60A'],
-                        borderWidth: 0
-                    }]
-                },
-                options: { cutout: '85%', plugins: { legend: { display: false } }, animation: { duration: 2000 } }
+            let tdee = bmr * activity;
+            let targetKcal = Math.round(tdee + goal);
+            
+            // Macros Estimation
+            let targetP = Math.round(weight * 2); // ~2g per kg
+            let targetF = Math.round(weight * 0.8); // ~0.8g per kg
+            let remainingKcal = targetKcal - ((targetP * 4) + (targetF * 9));
+            let targetC = Math.round(remainingKcal / 4);
+
+            userNeeds = { kcal: targetKcal, p: targetP, f: targetF, c: targetC };
+            localStorage.setItem('userNeeds', JSON.stringify(userNeeds));
+            
+            if (!history[currentDate]) {
+                history[currentDate] = { 'Breakfast': [], 'Lunch': [], 'Dinner': [], 'Snacks': [] };
+            }
+            document.getElementById('date-picker').value = currentDate;
+            
+            initDashboard();
+        });
+
+        function initDashboard() {
+            p1.classList.add('hidden');
+            p2.classList.remove('hidden');
+            renderMeals();
+            updateStats();
+        }
+
+        function parseUnitFromFood(food) {
+            const matchUnit = food.name.match(/\((\d+(?:\.\d+)?)\s*(g|ml|kg|l)\)/i);
+            if (matchUnit) {
+                return {
+                    qty: parseFloat(matchUnit[1]),
+                    unit: matchUnit[2].toLowerCase()
+                };
+            }
+            return { qty: 1, unit: 'qty' };
+        }
+
+        function renderMeals() {
+            const container = document.getElementById('meals-container');
+            container.innerHTML = '';
+            
+            meals.forEach(meal => {
+                mealSelections[meal] = null; // Reset selection tracker
+
+                let html = `
+                <div class="meal-section">
+                    <div class="meal-header">
+                        <h3 style="margin:0">${meal}</h3>
+                    </div>
+                    <ul class="food-list" id="list-${meal}">`;
+                
+                history[currentDate][meal].forEach((item, index) => {
+                    html += `
+                    <li class="food-item">
+                        <span>${item.name} (Qty: ${item.qty})</span>
+                        <span>${item.kcal} kcal <span style="color:#ff3b30; cursor:pointer; margin-left:10px; font-weight:bold;" onclick="removeFood('${meal}', ${index})">✕</span></span>
+                    </li>`;
+                });
+
+                html += `</ul>
+                    <div class="add-food-form" id="form-${meal}">
+                        <div class="autocomplete">
+                            <input type="text" id="search-${meal}" placeholder="Search for food..." autocomplete="off">
+                            <div class="autocomplete-items hidden" id="ac-${meal}"></div>
+                        </div>
+                        <div style="display:flex; flex-direction:column; flex: 1; margin-top: 15px; width: 100%;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                                <small id="qty-label-${meal}" style="font-size:13px; opacity:0.9;">Adjust Quantity / Weight</small>
+                                <small id="preview-${meal}" style="font-size:14px; color: #ff9a9e; font-weight:bold;"></small>
+                            </div>
+                            <div style="display:flex; align-items:center; gap: 15px;">
+                                <input type="range" id="qty-slider-${meal}" min="0.1" max="10" step="0.1" value="1" style="flex:1;">
+                                <button type="button" id="qty-minus-${meal}" class="btn-secondary" style="display:none; margin:0; padding: 8px 14px; border-radius: 8px; font-size: 18px; font-weight:bold; line-height:1;">-</button>
+                                <input type="number" class="qty-input" id="qty-${meal}" value="1" min="0.1" step="0.1" style="width: 80px; text-align: center; padding: 10px;">
+                                <button type="button" id="qty-plus-${meal}" class="btn-secondary" style="display:none; margin:0; padding: 8px 14px; border-radius: 8px; font-size: 18px; font-weight:bold; line-height:1;">+</button>
+                                <button class="btn btn-secondary" onclick="addFood('${meal}')" style="margin:0; padding: 10px 20px; border-radius: 12px;">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+                
+                container.innerHTML += html;
+            });
+
+            // Setup autocomplete and slider listeners
+            meals.forEach(meal => {
+                const searchInp = document.getElementById(`search-${meal}`);
+                const acBox = document.getElementById(`ac-${meal}`);
+                const slider = document.getElementById(`qty-slider-${meal}`);
+                const qtyInput = document.getElementById(`qty-${meal}`);
+                const preview = document.getElementById(`preview-${meal}`);
+                const label = document.getElementById(`qty-label-${meal}`);
+                const btnMinus = document.getElementById(`qty-minus-${meal}`);
+                const btnPlus = document.getElementById(`qty-plus-${meal}`);
+                
+                // Function to update the calorie preview label
+                const updatePreview = () => {
+                    const inputVal = parseFloat(qtyInput.value) || 0;
+                    if (mealSelections[meal]) {
+                        let multiplier = inputVal;
+                        if (mealSelections[meal].unitInfo.unit !== 'qty') {
+                            multiplier = inputVal / mealSelections[meal].unitInfo.qty;
+                        }
+                        const kcals = Math.round(mealSelections[meal].kcal * multiplier);
+                        preview.innerText = `${kcals} kcal`;
+                    } else {
+                        preview.innerText = '';
+                    }
+                };
+
+                const updateSliderBounds = (food) => {
+                    if (food.unitInfo.unit !== 'qty') {
+                        // It's a weight or volume
+                        slider.style.display = 'block';
+                        btnMinus.style.display = 'none';
+                        btnPlus.style.display = 'none';
+                        
+                        slider.min = 1;
+                        slider.max = food.unitInfo.qty * 5; // e.g., 500g max if base is 100g
+                        slider.step = 1;
+                        slider.value = food.unitInfo.qty;
+                        qtyInput.min = 1;
+                        qtyInput.step = 1;
+                        qtyInput.value = food.unitInfo.qty;
+                        label.innerText = `Adjust Amount (${food.unitInfo.unit})`;
+                    } else {
+                        // It's a quantity like 1 piece
+                        slider.style.display = 'none';
+                        btnMinus.style.display = 'inline-block';
+                        btnPlus.style.display = 'inline-block';
+                        
+                        slider.min = 0.5;
+                        slider.max = 10;
+                        slider.step = 0.5;
+                        slider.value = 1;
+                        qtyInput.min = 0.5;
+                        qtyInput.step = 0.5;
+                        qtyInput.value = 1;
+                        label.innerText = 'Adjust Quantity';
+                    }
+                    updatePreview();
+                };
+
+                // Sync Slider and Input
+                slider.addEventListener('input', (e) => {
+                    qtyInput.value = e.target.value;
+                    updatePreview();
+                });
+                qtyInput.addEventListener('input', (e) => {
+                    slider.value = e.target.value;
+                    updatePreview();
+                });
+                btnMinus.addEventListener('click', () => {
+                    let val = parseFloat(qtyInput.value) || 0;
+                    let step = parseFloat(qtyInput.step) || 0.5;
+                    let min = parseFloat(qtyInput.min) || 0.5;
+                    if (val - step >= min) {
+                        // Using toFixed handles floating point issues
+                        qtyInput.value = Number((val - step).toFixed(1));
+                        slider.value = qtyInput.value;
+                        updatePreview();
+                    }
+                });
+                btnPlus.addEventListener('click', () => {
+                    let val = parseFloat(qtyInput.value) || 0;
+                    let step = parseFloat(qtyInput.step) || 0.5;
+                    qtyInput.value = Number((val + step).toFixed(1));
+                    slider.value = qtyInput.value;
+                    updatePreview();
+                });
+                
+                searchInp.addEventListener('input', function() {
+                    let val = this.value;
+                    acBox.innerHTML = '';
+                    mealSelections[meal] = null;
+                    updatePreview();
+
+                    if (!val) { acBox.classList.add('hidden'); return; }
+                    acBox.classList.remove('hidden');
+                    
+                    let matches = foodDB.filter(f => f.name.toLowerCase().includes(val.toLowerCase()));
+                    matches.forEach(match => {
+                        let div = document.createElement('div');
+                        div.innerHTML = `${match.name} <small>(${match.kcal} kcal)</small>`;
+                        div.addEventListener('click', () => {
+                            searchInp.value = match.name;
+                            const foodWithUnit = { ...match, unitInfo: parseUnitFromFood(match) };
+                            mealSelections[meal] = foodWithUnit;
+                            
+                            updateSliderBounds(foodWithUnit);
+                            
+                            acBox.classList.add('hidden');
+                        });
+                        acBox.appendChild(div);
+                    });
+                });
+
+                // Hide autocomplete on click outside
+                document.addEventListener('click', (e) => {
+                    if(e.target !== searchInp) acBox.classList.add('hidden');
+                });
             });
         }
 
-        function animate(id, val) {
-            let s = 0; const obj = document.getElementById(id);
-            const t = setInterval(() => {
-                s += Math.ceil(val/40);
-                if(s >= val) { obj.innerText = Math.round(val); clearInterval(t); }
-                else obj.innerText = s;
-            }, 20);
+        function addFood(meal) {
+            const searchVal = document.getElementById(`search-${meal}`).value;
+            const inputVal = parseFloat(document.getElementById(`qty-${meal}`).value) || 1;
+            
+            // Prioritize the actively selected item, fallback to direct string match
+            let food = mealSelections[meal];
+            if (!food || food.name.toLowerCase() !== searchVal.toLowerCase()) {
+                let dbFood = foodDB.find(f => f.name.toLowerCase() === searchVal.toLowerCase());
+                if (dbFood) {
+                    food = { ...dbFood, unitInfo: parseUnitFromFood(dbFood) };
+                }
+            }
+
+            if(!food) { alert('Please select a valid food from the list.'); return; }
+
+            let multiplier = inputVal;
+            let displayQty = inputVal + (food.unitInfo.unit !== 'qty' ? food.unitInfo.unit : '');
+
+            if (food.unitInfo.unit !== 'qty') {
+                multiplier = inputVal / food.unitInfo.qty;
+            } else {
+                displayQty = 'x' + inputVal;
+            }
+
+            const entry = {
+                name: food.name,
+                qty: displayQty,
+                kcal: Math.round(food.kcal * multiplier),
+                p: Math.round(food.p * multiplier),
+                f: Math.round(food.f * multiplier),
+                c: Math.round(food.c * multiplier)
+            };
+
+            history[currentDate][meal].push(entry);
+            saveData();
+            renderMeals();
+            updateStats();
         }
+
+        function removeFood(meal, index) {
+            history[currentDate][meal].splice(index, 1);
+            saveData();
+            renderMeals();
+            updateStats();
+        }
+
+        function saveData() {
+            localStorage.setItem('history', JSON.stringify(history));
+            // Keep old format updated just in case for a while
+            localStorage.setItem('diary', JSON.stringify(history[currentDate]));
+        }
+
+        function updateStats() {
+            consumed = { kcal: 0, p: 0, f: 0, c: 0 };
+            
+            meals.forEach(meal => {
+                history[currentDate][meal].forEach(item => {
+                    consumed.kcal += item.kcal;
+                    consumed.p += item.p;
+                    consumed.f += item.f;
+                    consumed.c += item.c;
+                });
+            });
+
+            const updateBar = (id, textId, current, target, unit) => {
+                document.getElementById(textId).innerText = `${current} / ${target} ${unit}`;
+                let percent = (current / target) * 100;
+                if(percent > 100) percent = 100;
+                // Timeout needed to trigger CSS animation on load
+                setTimeout(() => {
+                    document.getElementById(id).style.width = `${percent}%`;
+                }, 100);
+            };
+
+            updateBar('pb-cal', 'cal-text', consumed.kcal, userNeeds.kcal, 'kcal');
+            updateBar('pb-pro', 'pro-text', consumed.p, userNeeds.p, 'g');
+            updateBar('pb-fat', 'fat-text', consumed.f, userNeeds.f, 'g');
+            updateBar('pb-carb', 'carb-text', consumed.c, userNeeds.c, 'g');
+        }
+
+        // Custom Food Modal Logic
+        document.getElementById('btn-add-custom').addEventListener('click', () => {
+            document.getElementById('modal-custom').classList.remove('hidden');
+        });
+        document.getElementById('close-modal').addEventListener('click', () => {
+            document.getElementById('modal-custom').classList.add('hidden');
+        });
+        document.getElementById('btn-save-custom').addEventListener('click', () => {
+            const name = document.getElementById('cf-name').value;
+            const kcal = parseFloat(document.getElementById('cf-kcal').value) || 0;
+            const pro = parseFloat(document.getElementById('cf-pro').value) || 0;
+            const fat = parseFloat(document.getElementById('cf-fat').value) || 0;
+            const carb = parseFloat(document.getElementById('cf-carb').value) || 0;
+            
+            if(!name) { alert('Please enter a food name'); return; }
+            
+            const newFood = { name: name, kcal: kcal, p: pro, f: fat, c: carb };
+            foodDB.push(newFood);
+            
+            let customFoods = JSON.parse(localStorage.getItem('customFoods') || '[]');
+            customFoods.push(newFood);
+            localStorage.setItem('customFoods', JSON.stringify(customFoods));
+            
+            document.getElementById('modal-custom').classList.add('hidden');
+            document.getElementById('cf-name').value = '';
+            document.getElementById('cf-kcal').value = '';
+            document.getElementById('cf-pro').value = '';
+            document.getElementById('cf-fat').value = '';
+            document.getElementById('cf-carb').value = '';
+            
+            alert('"' + name + '" added to food database! You can now search for it.');
+        });
+
+        // Reset
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            if(confirm('Are you sure you want to reset your setup profile and all food data?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        });
+
+        // Export All History PDF
+        document.getElementById('btn-download-all').addEventListener('click', () => {
+            const container = document.getElementById('full-history-container');
+            container.innerHTML = `<h1 style="text-align:center; margin-bottom:30px; font-family:'Inter',sans-serif;">Nutrition History Report</h1>`;
+            
+            const dates = Object.keys(history).sort((a,b) => new Date(a) - new Date(b));
+            
+            dates.forEach(date => {
+                let dailyKcal = 0, dailyP = 0, dailyF = 0, dailyC = 0;
+                let mealsHtml = '';
+                
+                meals.forEach(meal => {
+                    if(history[date][meal].length > 0) {
+                        mealsHtml += `<h4 style="margin:10px 0 5px 0; color:#555;">${meal}</h4><ul style="margin:0 0 15px 0; padding-left:20px;">`;
+                        history[date][meal].forEach(item => {
+                            mealsHtml += `<li style="font-size:14px; margin-bottom:3px;">${item.name} (${item.qty}) - ${item.kcal} kcal</li>`;
+                            dailyKcal += item.kcal; dailyP += item.p; dailyF += item.f; dailyC += item.c;
+                        });
+                        mealsHtml += `</ul>`;
+                    }
+                });
+                
+                if(dailyKcal > 0) {
+                    container.innerHTML += `
+                    <div style="margin-bottom:30px; page-break-inside: avoid; border:1px solid #eee; padding:15px; border-radius:10px;">
+                        <h2 style="margin-top:0; border-bottom:2px solid #007aff; padding-bottom:5px;">Date: ${date}</h2>
+                        <div style="display:flex; justify-content:space-between; background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px; font-weight:bold;">
+                            <span>Kcal: ${dailyKcal}</span>
+                            <span>Protein: ${dailyP}g</span>
+                            <span>Fats: ${dailyF}g</span>
+                            <span>Carbs: ${dailyC}g</span>
+                        </div>
+                        ${mealsHtml}
+                    </div>`;
+                }
+            });
+            
+            container.style.display = 'block';
+            
+            const opt = {
+                margin:       0.5,
+                filename:     `nutrition-full-history.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(container).save().then(() => {
+                container.style.display = 'none';
+                container.innerHTML = '';
+            });
+        });
+
+        // Download PDF
+        document.getElementById('btn-download').addEventListener('click', () => {
+            const element = document.getElementById('page-dashboard');
+            
+            // Hide buttons before printing to PDF
+            const topBarDate = document.getElementById('top-bar-date');
+            const topBarButtons = document.getElementById('top-bar-buttons');
+            const addForms = document.querySelectorAll('.add-food-form');
+            const deleteBtns = document.querySelectorAll('.food-item span span');
+            
+            // Instead of hiding date, let's just make sure buttons are hidden
+            topBarButtons.style.display = 'none';
+            topBarDate.style.display = 'none';
+            
+            // Let's add a clean date header for the PDF
+            const title = document.querySelector('.top-bar h2');
+            const oldTitle = title.innerText;
+            title.innerText = `Daily Nutrition (${currentDate})`;
+
+            addForms.forEach(form => form.style.display = 'none');
+            deleteBtns.forEach(btn => btn.style.display = 'none');
+            
+            const opt = {
+                margin:       0.5,
+                filename:     `nutrition-diary-${currentDate}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#f2f2f7' },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore buttons after PDF is generated
+                title.innerText = oldTitle;
+                topBarDate.style.display = 'flex';
+                topBarButtons.style.display = 'flex';
+                addForms.forEach(form => form.style.display = 'flex');
+                deleteBtns.forEach(btn => btn.style.display = 'inline');
+            });
+        });
+
     </script>
+    <footer class="footer">
+        Made by <span>OgAtul</span>
+    </footer>
 </body>
 </html>
